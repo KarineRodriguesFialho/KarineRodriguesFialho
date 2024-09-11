@@ -1,0 +1,190 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_VEICULOS 100
+#define MAX_CLIENTES 100
+
+typedef struct {
+    int id;
+    char marca[20];
+    char modelo[20];
+    int ano;
+    int disponivel; // 1 = disponível, 0 = locado
+} Veiculo;
+
+typedef struct {
+    int id;
+    char nome[50];
+    char cpf[15];
+} Cliente;
+
+typedef struct {
+    int id;
+    int idCliente;
+    int idVeiculo;
+} Locacao;
+
+Veiculo veiculos[MAX_VEICULOS];
+Cliente clientes[MAX_CLIENTES];
+Locacao locacoes[MAX_VEICULOS];
+int totalVeiculos = 0;
+int totalClientes = 0;
+int totalLocacoes = 0;
+
+// Função para consultar clientes
+void consultarClientes() {
+    printf("Clientes disponíveis:\n");
+    for (int i = 0; i < totalClientes; i++) {
+        printf("ID: %d | Nome: %s | CPF: %s\n", clientes[i].id, clientes[i].nome, clientes[i].cpf);
+    }
+}
+
+// Função para consultar veículos disponíveis
+void consultarVeiculos() {
+    printf("Veículos disponíveis:\n");
+    for (int i = 0; i < totalVeiculos; i++) {
+        if (veiculos[i].disponivel) {
+            printf("ID: %d | Marca: %s | Modelo: %s | Ano: %d\n",
+                   veiculos[i].id, veiculos[i].marca, veiculos[i].modelo, veiculos[i].ano);
+        }
+    }
+}
+
+// Função para selecionar um cliente
+int selecionarCliente() {
+    int idCliente;
+    consultarClientes();
+    printf("Escolha o ID do cliente: ");
+    scanf("%d", &idCliente);
+    
+    // Verifica se o ID do cliente é válido
+    for (int i = 0; i < totalClientes; i++) {
+        if (clientes[i].id == idCliente) {
+            return idCliente;
+        }
+    }
+    printf("ID do cliente inválido!\n");
+    return -1; // Retorna um valor inválido para indicar erro
+}
+
+// Função para selecionar um veículo
+int selecionarVeiculo() {
+    int idVeiculo;
+    consultarVeiculos();
+    printf("Escolha o ID do veículo: ");
+    scanf("%d", &idVeiculo);
+    
+    // Verifica se o ID do veículo é válido
+    for (int i = 0; i < totalVeiculos; i++) {
+        if (veiculos[i].id == idVeiculo && veiculos[i].disponivel) {
+            return idVeiculo;
+        }
+    }
+    printf("ID do veículo inválido ou veículo já está locado!\n");
+    return -1; // Retorna um valor inválido para indicar erro
+}
+
+// Função para registrar locação
+void registrarLocacao(int idCliente, int idVeiculo) {
+    // Verifica se o ID do cliente e do veículo são válidos
+    if (idCliente == -1 || idVeiculo == -1) {
+        return;
+    }
+    
+    // Cria a locação
+    Locacao locacao;
+    locacao.id = totalLocacoes + 1;
+    locacao.idCliente = idCliente;
+    locacao.idVeiculo = idVeiculo;
+    
+    // Adiciona a locação ao array
+    locacoes[totalLocacoes] = locacao;
+    totalLocacoes++;
+    
+    // Atualiza a disponibilidade do veículo
+    for (int i = 0; i < totalVeiculos; i++) {
+        if (veiculos[i].id == idVeiculo) {
+            veiculos[i].disponivel = 0;
+            break;
+        }
+    }
+    
+    printf("Locação realizada com sucesso! Cliente %d locou o veículo %d.\n", idCliente, idVeiculo);
+}
+
+// Função para cadastrar um veículo
+void cadastrarVeiculo() {
+    if (totalVeiculos >= MAX_VEICULOS) {
+        printf("Capacidade máxima de veículos atingida.\n");
+        return;
+    }
+
+    Veiculo v;
+    v.id = totalVeiculos + 1;
+    printf("Marca: ");
+    scanf("%s", v.marca);
+    printf("Modelo: ");
+    scanf("%s", v.modelo);
+    printf("Ano: ");
+    scanf("%d", &v.ano);
+    v.disponivel = 1;
+
+    veiculos[totalVeiculos] = v;
+    totalVeiculos++;
+    printf("Veículo cadastrado com sucesso!\n");
+}
+
+// Função para cadastrar um cliente
+void cadastrarCliente() {
+    if (totalClientes >= MAX_CLIENTES) {
+        printf("Capacidade máxima de clientes atingida.\n");
+        return;
+    }
+
+    Cliente c;
+    c.id = totalClientes + 1;
+    printf("Nome: ");
+    scanf(" %[^\n]%*c", c.nome);  // Lê até a nova linha
+    printf("CPF: ");
+    scanf("%s", c.cpf);  // Lê a entrada sem fgets
+
+    clientes[totalClientes] = c;
+    totalClientes++;
+    printf("Cliente cadastrado com sucesso!\n");
+}
+
+int main() {
+    int opcao, idCliente, idVeiculo;
+
+    do {
+        printf("\n--- Sistema de Locação de Veículos ---\n");
+        printf("1. Cadastrar Veículo\n");
+        printf("2. Cadastrar Cliente\n");
+        printf("3. Realizar Locação\n");
+        printf("4. Sair\n");
+        printf("Escolha uma opção: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+            case 1:
+                cadastrarVeiculo();
+                break;
+            case 2:
+                cadastrarCliente();
+                break;
+            case 3:
+                idCliente = selecionarCliente();
+                idVeiculo = selecionarVeiculo();
+                registrarLocacao(idCliente, idVeiculo);
+                break;
+            case 4:
+                printf("Saindo...\n");
+                break;
+            default:
+                printf("Opção inválida!\n");
+                break;
+        }
+    } while (opcao != 4);
+
+    return 0;
+}
